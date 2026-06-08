@@ -25,12 +25,13 @@ const { txHash: buy_itemTxHash } = await contract.buy_item.invoke(
 )
 console.log('buy_item txHash:', buy_itemTxHash)
 
-// list_item(seller: string, category: string, title: string, description: string, price: bigint) -> bigint
+// list_item(seller: string, category: string, title: string, description: string, file_link: string, price: bigint) -> bigint
 const { txHash: list_itemTxHash, result: list_itemResult } = await contract.list_item.invoke(
   'G...',  // seller: string
   '',  // category: string
   '',  // title: string
   '',  // description: string
+  '',  // file_link: string
   0n,  // price: bigint
 )
 console.log('list_item txHash:', list_itemTxHash, 'result:', list_itemResult)

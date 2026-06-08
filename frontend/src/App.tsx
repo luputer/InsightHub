@@ -4,10 +4,10 @@ import Dashboard from './pages/Dashboard'
 import Marketplace from './pages/Marketplace'
 import Analytics from './pages/Analytics'
 import Settings from './pages/Settings'
-import Weights from './pages/Weights'
+import Prompts from './pages/Prompts'
 import Notes from './pages/Notes'
 import Datasets from './pages/Datasets'
-import Algorithms from './pages/Algorithms'
+import Scripts from './pages/Scripts'
 
 function App() {
   return (
@@ -18,10 +18,10 @@ function App() {
         <Route path="/marketplace" element={<Marketplace />} />
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/settings" element={<Settings />} />
-        <Route path="/weights" element={<Weights />} />
+        <Route path="/prompts" element={<Prompts />} />
         <Route path="/notes" element={<Notes />} />
         <Route path="/datasets" element={<Datasets />} />
-        <Route path="/algorithms" element={<Algorithms />} />
+        <Route path="/scripts" element={<Scripts />} />
       </Routes>
     </BrowserRouter>
   )

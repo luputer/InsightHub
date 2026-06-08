@@ -48,6 +48,9 @@
                   "string": "Fine-tuned weights for finance"
                 },
                 {
+                  "string": ""
+                },
+                {
                   "i128": "1000000000"
                 }
               ]
@@ -163,6 +166,14 @@
                                 },
                                 "val": {
                                   "string": "Fine-tuned weights for finance"
+                                }
+                              },
+                              {
+                                "key": {
+                                  "symbol": "file_link"
+                                },
+                                "val": {
+                                  "string": ""
                                 }
                               },
                               {

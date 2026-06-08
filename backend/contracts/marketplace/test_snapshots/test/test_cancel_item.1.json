@@ -48,6 +48,9 @@
                   "string": "Optimized ZK prover"
                 },
                 {
+                  "string": ""
+                },
+                {
                   "i128": "2000000000"
                 }
               ]
@@ -185,6 +188,14 @@
                                 },
                                 "val": {
                                   "string": "Optimized ZK prover"
+                                }
+                              },
+                              {
+                                "key": {
+                                  "symbol": "file_link"
+                                },
+                                "val": {
+                                  "string": ""
                                 }
                               },
                               {

@@ -1,32 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import Footer from '../components/Footer'
+import DashboardHeader from '../components/DashboardHeader'
+import { getActiveListings, getMyListings, isConnected, getAddress, formatPrice, connectWallet } from '../services/soroban'
+import type { Listing } from '../contracts/marketplace'
 
-const stats = [
-  { label: 'Total Notes Published', value: '12,450', change: '+12.3%', up: true },
-  { label: 'XLM Earned', value: '84,250', change: '+8.1%', up: true },
-  { label: 'Active Listings', value: '3,842', change: '-2.4%', up: false },
-  { label: 'Total Traders', value: '1,247', change: '+5.7%', up: true },
-]
-
-const transactions = [
-  { asset: 'AI Ethics Framework', type: 'Purchase', amount: '250 XLM', status: 'Completed', date: '2026-06-01' },
-  { asset: 'Soroban Dev Guide', type: 'Sale', amount: '180 XLM', status: 'Completed', date: '2026-06-01' },
-  { asset: 'DeFi Strategy v3', type: 'Purchase', amount: '420 XLM', status: 'Pending', date: '2026-05-31' },
-  { asset: 'LLM Weights Pack', type: 'License', amount: '1,200 XLM', status: 'Active', date: '2026-05-30' },
-  { asset: 'ZK-Proof Tutorial', type: 'Purchase', amount: '95 XLM', status: 'Completed', date: '2026-05-29' },
-  { asset: 'Data Pipeline', type: 'Sale', amount: '640 XLM', status: 'Active', date: '2026-05-28' },
-]
-
-const insights = [
-  { title: 'Zero-Knowledge Proofs in DeFi', author: '@cryptographic', price: '150 XLM', rating: 4.8 },
-  { title: 'Scaling Soroban: Best Practices', author: '@stellar_dev', price: '200 XLM', rating: 4.9 },
-  { title: 'AI Agent Economic Models', author: '@agent_theory', price: '320 XLM', rating: 4.7 },
-]
-
-const timeRanges = ['24H', '7D', '30D', '1Y']
-
-function StatCard({ label, value, change, up, index }: typeof stats[0] & { index: number }) {
+function StatCard({ label, value, index, color = 'text-primary' }: { label: string, value: string, index: number, color?: string }) {
   return (
     <div
       className="glass-card rounded-xl px-md py-lg flex flex-col gap-sm"
@@ -34,297 +13,244 @@ function StatCard({ label, value, change, up, index }: typeof stats[0] & { index
     >
       <span className="font-body-sm text-body-sm text-on-surface-variant">{label}</span>
       <div className="flex items-baseline gap-sm">
-        <span className="font-label-md text-headline-md text-primary" style={{ fontFamily: 'JetBrains Mono, monospace' }}>
+        <span className={`font-label-md text-headline-md ${color}`} style={{ fontFamily: 'JetBrains Mono, monospace' }}>
           {value}
         </span>
-        <span className={`font-label-sm text-label-sm ${up ? 'text-green-400' : 'text-red-400'}`}>
-          {change}
-        </span>
       </div>
     </div>
-  )
-}
-
-function SparklineChart() {
-  const points = [30, 45, 38, 52, 48, 62, 55, 70, 65, 78, 72, 85, 80, 92, 88, 95, 90, 98, 94, 100]
-  const width = 200
-  const height = 40
-  const max = 100
-  const stepX = width / (points.length - 1)
-  const d = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${i * stepX},${height - (p / max) * height}`).join(' ')
-
-  return (
-    <svg width={width} height={height} className="w-full h-full">
-      <defs>
-        <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#00f0ff" stopOpacity="0.4" />
-          <stop offset="100%" stopColor="#00f0ff" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <path d={`${d} L${width},${height} L0,${height} Z`} fill="url(#sparkGrad)" />
-      <path d={d} fill="none" stroke="#00f0ff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
-}
-
-function MarketChart() {
-  const [activeRange, setActiveRange] = useState('7D')
-  const points = [40, 55, 48, 62, 58, 72, 68, 80, 75, 85, 82, 90, 88, 92, 95, 88, 94, 98, 96, 100]
-  const width = 600
-  const height = 180
-  const max = 100
-  const stepX = width / (points.length - 1)
-  const d = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${i * stepX},${height - (p / max) * height}`).join(' ')
-
-  return (
-    <div className="glass-card rounded-xl p-md flex flex-col gap-md">
-      <div className="flex items-center justify-between">
-        <h2 className="font-headline-md text-headline-md text-on-surface">Market Overview</h2>
-        <div className="flex gap-xs">
-          {timeRanges.map((r) => (
-            <button
-              key={r}
-              onClick={() => setActiveRange(r)}
-              className={`px-sm py-1 font-label-sm text-label-sm rounded-md transition-all cursor-pointer ${
-                activeRange === r
-                  ? 'bg-primary-container text-on-primary-container'
-                  : 'text-on-surface-variant hover:text-primary hover:bg-white/5'
-              }`}
-            >
-              {r}
-            </button>
-          ))}
-        </div>
-      </div>
-      <div className="relative w-full" style={{ height: 200 }}>
-        <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full" preserveAspectRatio="none">
-          <defs>
-            <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#00f0ff" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="#00f0ff" stopOpacity="0" />
-            </linearGradient>
-          </defs>
-          {[25, 50, 75].map((line) => (
-            <line
-              key={line}
-              x1="0" y1={(height * line) / 100}
-              x2={width} y2={(height * line) / 100}
-              stroke="rgba(255,255,255,0.05)"
-              strokeWidth="1"
-            />
-          ))}
-          <path d={`${d} L${width},${height} L0,${height} Z`} fill="url(#chartGrad)" />
-          <path d={d} fill="none" stroke="#00f0ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          {[points.length - 1].map((i) => (
-            <circle
-              key={i}
-              cx={i * stepX}
-              cy={height - (points[i] / max) * height}
-              r="4"
-              fill="#00f0ff"
-            />
-          ))}
-        </svg>
-      </div>
-      <div className="flex justify-between font-label-sm text-label-sm text-on-surface-variant">
-        <span>Volume (XLM)</span>
-        <span style={{ fontFamily: 'JetBrains Mono, monospace' }}>+18.4% this period</span>
-      </div>
-    </div>
-  )
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const colors: Record<string, string> = {
-    Completed: 'bg-green-500/10 text-green-400 border-green-500/30',
-    Pending: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30',
-    Active: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30',
-  }
-
-  return (
-    <span className={`px-sm py-1 rounded-full font-label-sm text-label-sm border ${colors[status] || ''}`}>
-      {status}
-    </span>
-  )
-}
-
-function StarRating({ rating }: { rating: number }) {
-  return (
-    <span className="flex items-center gap-xs">
-      {Array.from({ length: 5 }, (_, i) => (
-        <span key={i} className={`text-sm ${i < Math.floor(rating) ? 'text-yellow-400' : 'text-white/20'}`}>
-          ★
-        </span>
-      ))}
-      <span className="font-label-sm text-label-sm text-on-surface-variant ml-xs">{rating}</span>
-    </span>
   )
 }
 
 export default function Dashboard() {
-  const [walletConnected, setWalletConnected] = useState(false)
+  const [allListings, setAllListings] = useState<Listing[]>([])
+  const [myListings, setMyListings] = useState<Listing[]>([])
+  const [loading, setLoading] = useState(true)
+  const [address, setAddress] = useState<string | null>(() => isConnected() ? getAddress() : null)
+
+  const loadDashboardData = useCallback(async (userAddress: string | null) => {
+    try {
+      setLoading(true)
+      const all = await getActiveListings()
+      setAllListings(all)
+
+      if (userAddress) {
+        const mine = await getMyListings(userAddress)
+        setMyListings(mine)
+      } else {
+        setMyListings([])
+      }
+    } catch (err) {
+      console.error('Failed to fetch dashboard data:', err)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  // Initial load
+  useEffect(() => {
+    Promise.resolve().then(() => {
+      loadDashboardData(address)
+    })
+  }, [address, loadDashboardData])
+
+  // Sync wallet state across components (header / modal)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const activeAddr = isConnected() ? getAddress() : null
+      if (activeAddr !== address) {
+        setAddress(activeAddr)
+      }
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [address])
+
+  const handleConnect = async () => {
+    try {
+      setLoading(true)
+      const addr = await connectWallet()
+      setAddress(addr)
+    } catch (err) {
+      console.error('Wallet connection failed:', err)
+      alert('Failed to connect wallet. Make sure Freighter is installed!')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const stats = useMemo(() => {
+    const totalVolume = allListings.reduce((acc, curr) => acc + curr.price, 0n)
+    return [
+      { label: 'Platform Assets', value: allListings.length.toString(), color: 'text-primary' },
+      { label: 'My Active Listings', value: myListings.length.toString(), color: 'text-secondary' },
+      { label: 'Network Volume', value: formatPrice(totalVolume), color: 'text-primary' },
+      { label: 'Stellar Status', value: 'Active', color: 'text-green-400' },
+    ]
+  }, [allListings, myListings])
+
+  if (!isConnected()) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background text-on-surface">
+        <DashboardHeader />
+
+        <main
+          className="flex-1 flex items-center justify-center"
+          style={{
+            paddingTop: '70px',
+            width: '100vw',
+            minHeight: '70vh',
+          }}
+        >
+          <div
+            className="flex flex-col items-center text-center bg-surface-container-low/40 border border-white/5 rounded-2xl backdrop-blur-md shadow-xl"
+            style={{
+              width: 'min(360px, calc(100vw - 2rem))',
+              padding: '2.5rem 2rem',
+            }}
+          >
+            <span
+              className="material-symbols-outlined text-primary mb-5"
+              style={{ fontSize: '48px' }}
+            >
+              monitoring
+            </span>
+
+            <h1 className="text-xl font-bold text-on-surface mb-3">
+              Analytics Locked
+            </h1>
+
+            <p
+              className="text-sm text-on-surface-variant mb-8"
+              style={{ lineHeight: '1.7', maxWidth: '260px' }}
+            >
+              Connect your wallet to access real-time market intelligence,
+              network performance, and platform data metrics.
+            </p>
+
+            <button
+              className="w-full bg-primary hover:bg-primary/90 text-on-primary text-sm font-medium rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+              style={{ padding: '0.75rem 1.5rem' }}
+            >
+              Connect Freighter Wallet
+            </button>
+          </div>
+        </main>
+
+        <Footer />
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-white/10">
-        <nav className="flex justify-between items-center px-gutter py-4 max-w-container-max mx-auto">
-          <Link to="/" className="text-headline-md font-bold text-primary-container no-underline">
-            InsightHub
-          </Link>
-          <div className="hidden md:flex items-center gap-lg">
-            <Link to="/dashboard" className="font-label-md text-label-md text-primary-container border-b-2 border-primary-container pb-1 no-underline">
-              Dashboard
-            </Link>
-            <Link to="/marketplace" className="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors no-underline">
-              Marketplace
-            </Link>
-            <Link to="/analytics" className="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors no-underline">
-              Analytics
-            </Link>
-            <Link to="/settings" className="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors no-underline">
-              Settings
-            </Link>
-          </div>
-          <div className="flex items-center gap-md">
-            {walletConnected ? (
-              <div className="flex items-center gap-sm px-sm py-2 bg-surface-container-high rounded-md">
-                <span className="w-2 h-2 rounded-full bg-green-400" />
-                <span className="font-label-sm text-label-sm text-on-surface" style={{ fontFamily: 'JetBrains Mono, monospace' }}>
-                  GA6...8F2
-                </span>
-              </div>
-            ) : (
-              <button
-                onClick={() => setWalletConnected(true)}
-                className="px-md py-2 bg-primary-container text-on-primary-container font-label-md rounded-md neon-glow active:scale-95 transition-transform cursor-pointer"
-              >
-                Connect Wallet
-              </button>
-            )}
-          </div>
-        </nav>
-      </header>
+      <DashboardHeader />
 
       <main className="pt-[100px] pb-xl px-gutter max-w-container-max mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-lg gap-md">
           <div>
             <h1 className="font-headline-xl text-headline-xl text-on-surface mb-xs">Dashboard</h1>
             <p className="font-body-md text-body-md text-on-surface-variant">
-              Welcome back, Researcher. Here's your marketplace overview.
+              Welcome back, {address?.slice(0, 8)}...{address?.slice(-4)}.
             </p>
           </div>
-          <div className="flex items-center gap-sm">
-            <span className="w-2 h-2 rounded-full bg-green-400" />
-            <span className="font-label-sm text-label-sm text-on-surface-variant">Stellar Testnet</span>
+          <div className="flex items-center gap-sm bg-surface-container-high px-4 py-2 rounded-full border border-white/10">
+            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+            <span className="font-label-sm text-label-sm text-on-surface">Connected to Testnet</span>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-md mb-lg">
-          {stats.map((stat, i) => (
-            <StatCard key={stat.label} {...stat} index={i} />
-          ))}
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-md mb-lg">
-          <div className="lg:col-span-2">
-            <MarketChart />
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-40 opacity-50">
+            <span className="material-symbols-outlined text-6xl animate-spin mb-4 text-primary-container">
+              sync
+            </span>
+            <p className="font-label-lg text-label-lg">Syncing Dashboard...</p>
           </div>
-          <div className="glass-card rounded-xl p-md flex flex-col gap-md">
-            <h2 className="font-headline-md text-headline-md text-on-surface">Portfolio</h2>
-            <div className="flex flex-col gap-md flex-1 justify-center">
-              <div>
-                <div className="font-body-sm text-body-sm text-on-surface-variant mb-xs">Total Balance</div>
-                <div className="font-label-md text-headline-lg text-primary" style={{ fontFamily: 'JetBrains Mono, monospace' }}>
-                  8,425 XLM
+        ) : (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-md mb-lg">
+              {stats.map((stat, i) => (
+                <StatCard key={stat.label} {...stat} index={i} />
+              ))}
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-md mb-lg">
+              <div className="lg:col-span-2 glass-card rounded-2xl p-md">
+                <div className="flex items-center justify-between mb-lg">
+                  <h2 className="font-headline-md text-headline-md text-on-surface">My Active Assets</h2>
+                  <Link to="/marketplace" className="text-primary-container font-label-md text-label-md no-underline hover:underline">View All</Link>
                 </div>
-                <SparklineChart />
+                {myListings.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-20 bg-surface-container-lowest/50 rounded-xl border border-dashed border-white/5">
+                    <span className="material-symbols-outlined text-5xl mb-4 text-on-surface-variant/20">post_add</span>
+                    <p className="font-body-md text-on-surface-variant">You haven't listed any assets yet.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {myListings.map(listing => (
+                      <div key={listing.id.toString()} className="flex items-center justify-between p-4 bg-surface-container-high/50 rounded-xl border border-white/5 hover:border-primary-container/30 transition-all">
+                        <div className="flex flex-col">
+                          <span className="font-label-md text-on-surface">{listing.title}</span>
+                          <span className="font-label-sm text-on-surface-variant">{listing.category}</span>
+                        </div>
+                        <div className="font-label-md text-primary-container" style={{ fontFamily: 'JetBrains Mono, monospace' }}>
+                          {formatPrice(listing.price)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-              <div className="flex justify-between pt-md border-t border-white/10">
-                <div>
-                  <div className="font-body-sm text-body-sm text-on-surface-variant">Assets Listed</div>
-                  <div className="font-label-md text-headline-md text-on-surface" style={{ fontFamily: 'JetBrains Mono, monospace' }}>23</div>
-                </div>
-                <div>
-                  <div className="font-body-sm text-body-sm text-on-surface-variant">Active Traders</div>
-                  <div className="font-label-md text-headline-md text-on-surface" style={{ fontFamily: 'JetBrains Mono, monospace' }}>847</div>
+
+              <div className="glass-card rounded-2xl p-md flex flex-col gap-md">
+                <h2 className="font-headline-md text-headline-md text-on-surface">Platform Insights</h2>
+                <div className="flex flex-col gap-6 flex-1 justify-center">
+                  <div className="p-4 bg-primary-container/5 rounded-xl border border-primary-container/10">
+                    <div className="font-body-sm text-on-surface-variant mb-1">Total Market Value</div>
+                    <div className="font-label-md text-headline-lg text-primary" style={{ fontFamily: 'JetBrains Mono, monospace' }}>
+                      {formatPrice(allListings.reduce((acc, curr) => acc + curr.price, 0n))}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 bg-surface-container-highest/30 rounded-xl">
+                      <div className="font-body-sm text-on-surface-variant">Unique Sellers</div>
+                      <div className="font-label-md text-headline-md text-on-surface">{new Set(allListings.map(l => l.seller)).size}</div>
+                    </div>
+                    <div className="p-4 bg-surface-container-highest/30 rounded-xl">
+                      <div className="font-body-sm text-on-surface-variant">Avg Price</div>
+                      <div className="font-label-md text-headline-sm text-on-surface">
+                        {allListings.length > 0 ? formatPrice(allListings.reduce((acc, curr) => acc + curr.price, 0n) / BigInt(allListings.length)) : '0 XLM'}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
 
-        <div className="glass-card rounded-xl p-md mb-lg overflow-x-auto">
-          <h2 className="font-headline-md text-headline-md text-on-surface mb-md">Recent Transactions</h2>
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="border-b border-white/10">
-                <th className="text-left font-label-sm text-label-sm text-on-surface-variant pb-sm pr-md">Asset</th>
-                <th className="text-left font-label-sm text-label-sm text-on-surface-variant pb-sm pr-md">Type</th>
-                <th className="text-right font-label-sm text-label-sm text-on-surface-variant pb-sm pr-md">Amount</th>
-                <th className="text-center font-label-sm text-label-sm text-on-surface-variant pb-sm pr-md">Status</th>
-                <th className="text-right font-label-sm text-label-sm text-on-surface-variant pb-sm">Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {transactions.map((tx) => (
-                <tr key={tx.asset + tx.date} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
-                  <td className="py-sm pr-md font-body-md text-body-md text-on-surface">{tx.asset}</td>
-                  <td className="py-sm pr-md font-body-sm text-body-sm text-on-surface-variant">{tx.type}</td>
-                  <td className="py-sm pr-md text-right font-label-md text-label-md text-on-surface" style={{ fontFamily: 'JetBrains Mono, monospace' }}>
-                    {tx.amount}
-                  </td>
-                  <td className="py-sm pr-md text-center">
-                    <StatusBadge status={tx.status} />
-                  </td>
-                  <td className="py-sm text-right font-body-sm text-body-sm text-on-surface-variant">{tx.date}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="mb-lg">
-          <h2 className="font-headline-md text-headline-md text-on-surface mb-md">Top Performing Insights</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-md">
-            {insights.map((item) => (
-              <div key={item.title} className="glass-card rounded-xl p-md flex flex-col gap-sm">
-                <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Research</span>
-                <h3 className="font-headline-md text-headline-md text-on-surface">{item.title}</h3>
-                <div className="font-body-sm text-body-sm text-on-surface-variant">by {item.author}</div>
-                <StarRating rating={item.rating} />
-                <div className="flex items-center justify-between mt-sm pt-sm border-t border-white/10">
-                  <span className="font-label-md text-label-md text-primary" style={{ fontFamily: 'JetBrains Mono, monospace' }}>
-                    {item.price}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-md">
+              {[
+                { icon: 'bolt', label: 'Explore Prompts', to: '/prompts' },
+                { icon: 'code', label: 'Browse Scripts', to: '/scripts' },
+                { icon: 'database', label: 'Data Packs', to: '/datasets' },
+                { icon: 'menu_book', label: 'Read Guides', to: '/notes' },
+              ].map((action) => (
+                <Link
+                  key={action.label}
+                  to={action.to}
+                  className="glass-card rounded-2xl p-xl flex flex-col items-center justify-center gap-md cursor-pointer hover:border-primary-container/40 hover:bg-surface-container-high/50 group transition-all min-h-[160px] no-underline"
+                >
+                  <div className="w-14 h-14 rounded-full bg-primary-container/10 flex items-center justify-center group-hover:bg-primary-container/20 transition-colors">
+                    <span className="material-symbols-outlined text-3xl text-primary-container group-hover:scale-110 transition-transform">
+                      {action.icon}
+                    </span>
+                  </div>
+                  <span className="font-label-md text-label-md text-on-surface group-hover:text-primary-container transition-colors text-center">
+                    {action.label}
                   </span>
-                  <button className="px-md py-2 bg-primary-container/20 text-primary-container border border-primary-container/40 rounded-md font-label-sm text-label-sm hover:bg-primary-container/30 transition-all cursor-pointer">
-                    View
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-md mb-lg">
-          {[
-            { icon: 'edit_note', label: 'Publish Insight' },
-            { icon: 'dataset', label: 'Create Dataset' },
-            { icon: 'robot_2', label: 'Deploy Agent' },
-            { icon: 'bar_chart_4_bars', label: 'View Analytics' },
-          ].map((action) => (
-            <button
-              key={action.label}
-              className="glass-card rounded-xl p-md flex flex-col items-center gap-sm cursor-pointer hover:border-primary-container/40 group"
-            >
-              <span className="material-symbols-outlined text-2xl text-primary-container group-hover:scale-110 transition-transform">
-                {action.icon}
-              </span>
-              <span className="font-body-sm text-body-sm text-on-surface-variant group-hover:text-primary transition-colors">
-                {action.label}
-              </span>
-            </button>
-          ))}
-        </div>
+                </Link>
+              ))}
+            </div>
+          </>
+        )}
       </main>
 
       <Footer />

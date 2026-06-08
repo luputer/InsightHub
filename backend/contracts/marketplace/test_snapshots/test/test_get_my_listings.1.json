@@ -48,6 +48,9 @@
                   "string": "Desc"
                 },
                 {
+                  "string": ""
+                },
+                {
                   "i128": "100000000"
                 }
               ]
@@ -77,6 +80,9 @@
                 },
                 {
                   "string": "Desc"
+                },
+                {
+                  "string": ""
                 },
                 {
                   "i128": "200000000"
@@ -198,6 +204,14 @@
                               },
                               {
                                 "key": {
+                                  "symbol": "file_link"
+                                },
+                                "val": {
+                                  "string": ""
+                                }
+                              },
+                              {
+                                "key": {
                                   "symbol": "id"
                                 },
                                 "val": {
@@ -262,6 +276,14 @@
                                 },
                                 "val": {
                                   "string": "Desc"
+                                }
+                              },
+                              {
+                                "key": {
+                                  "symbol": "file_link"
+                                },
+                                "val": {
+                                  "string": ""
                                 }
                               },
                               {

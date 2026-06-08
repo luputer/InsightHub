@@ -34,6 +34,7 @@ fn test_list_and_get_listings() {
         &String::from_str(&env, "Weights"),
         &String::from_str(&env, "Llama-3 70B"),
         &String::from_str(&env, "Fine-tuned weights for finance"),
+        &String::from_str(&env, ""),
         &1_000_000_000,
     );
     assert_eq!(id, 1);
@@ -60,6 +61,7 @@ fn test_buy_item() {
         &String::from_str(&env, "Datasets"),
         &String::from_str(&env, "Crypto Sentiment Data"),
         &String::from_str(&env, "10M labeled tweets"),
+        &String::from_str(&env, ""),
         &500_000_000,
     );
 
@@ -95,6 +97,7 @@ fn test_cancel_item() {
         &String::from_str(&env, "Algorithms"),
         &String::from_str(&env, "ZK Prover"),
         &String::from_str(&env, "Optimized ZK prover"),
+        &String::from_str(&env, ""),
         &2_000_000_000,
     );
 
@@ -113,6 +116,7 @@ fn test_update_item() {
         &String::from_str(&env, "Weights"),
         &String::from_str(&env, "Original Title"),
         &String::from_str(&env, "Original desc"),
+        &String::from_str(&env, ""),
         &100_000_000,
     );
 
@@ -141,6 +145,7 @@ fn test_get_my_listings() {
         &String::from_str(&env, "Weights"),
         &String::from_str(&env, "My Weight"),
         &String::from_str(&env, "Desc"),
+        &String::from_str(&env, ""),
         &100_000_000,
     );
 
@@ -149,6 +154,7 @@ fn test_get_my_listings() {
         &String::from_str(&env, "Datasets"),
         &String::from_str(&env, "Other Dataset"),
         &String::from_str(&env, "Desc"),
+        &String::from_str(&env, ""),
         &200_000_000,
     );
 
@@ -169,6 +175,7 @@ fn test_cannot_buy_own_listing() {
         &String::from_str(&env, "Weights"),
         &String::from_str(&env, "Test"),
         &String::from_str(&env, "Desc"),
+        &String::from_str(&env, ""),
         &100_000_000,
     );
 
@@ -188,6 +195,7 @@ fn test_get_active_listings() {
         &String::from_str(&env, "Weights"),
         &String::from_str(&env, "Active Item"),
         &String::from_str(&env, "Desc"),
+        &String::from_str(&env, ""),
         &100_000_000,
     );
 
@@ -196,6 +204,7 @@ fn test_get_active_listings() {
         &String::from_str(&env, "Datasets"),
         &String::from_str(&env, "Will be cancelled"),
         &String::from_str(&env, "Desc"),
+        &String::from_str(&env, ""),
         &200_000_000,
     );
 
@@ -217,6 +226,7 @@ fn test_cannot_update_wrong_seller() {
         &String::from_str(&env, "Weights"),
         &String::from_str(&env, "Mine"),
         &String::from_str(&env, "Desc"),
+        &String::from_str(&env, ""),
         &100_000_000,
     );
 
@@ -244,6 +254,7 @@ fn test_buy_inactive_listing_fails() {
         &String::from_str(&env, "Weights"),
         &String::from_str(&env, "Item"),
         &String::from_str(&env, "Desc"),
+        &String::from_str(&env, ""),
         &100_000_000,
     );
 

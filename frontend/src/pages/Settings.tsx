@@ -1,49 +1,6 @@
 import { useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
 import Footer from '../components/Footer'
-
-function DashboardNav() {
-  const location = useLocation()
-
-  const links = [
-    { to: '/dashboard', label: 'Dashboard' },
-    { to: '/marketplace', label: 'Marketplace' },
-    { to: '/analytics', label: 'Analytics' },
-    { to: '/settings', label: 'Settings' },
-  ]
-
-  return (
-    <header className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-white/10 shadow-[0_0_15px_rgba(0,240,255,0.1)]">
-      <nav className="flex justify-between items-center px-gutter py-4 max-w-container-max mx-auto">
-        <div className="flex items-center gap-lg">
-          <Link to="/" className="text-headline-md font-bold text-primary-container no-underline">
-            InsightHub
-          </Link>
-          <div className="hidden md:flex items-center gap-md">
-            {links.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                className={`font-label-md text-label-md pb-1 no-underline transition-colors ${
-                  location.pathname === link.to
-                    ? 'text-primary-container border-b-2 border-primary-container'
-                    : 'text-on-surface-variant hover:text-primary'
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </div>
-        </div>
-        <div className="flex items-center gap-md">
-          <button className="px-md py-2 bg-primary-container text-on-primary font-label-md rounded-lg neon-glow active:scale-95 transition-transform cursor-pointer">
-            Connect Wallet
-          </button>
-        </div>
-      </nav>
-    </header>
-  )
-}
+import DashboardHeader from '../components/DashboardHeader'
 
 const settingsTabs = ['Profile', 'Notifications', 'Wallet', 'API Keys']
 
@@ -54,8 +11,8 @@ export default function Settings() {
   const [walletConnected] = useState(true)
 
   return (
-    <div className="min-h-screen bg-background">
-      <DashboardNav />
+    <div className="min-h-screen bg-background text-on-surface selection:bg-primary-container selection:text-on-primary-container">
+      <DashboardHeader />
 
       <main className="pt-[100px] pb-xl px-gutter max-w-container-max mx-auto">
         <div className="mb-lg">

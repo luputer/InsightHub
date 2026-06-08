@@ -9,6 +9,7 @@ pub struct Listing {
     pub category: String,
     pub title: String,
     pub description: String,
+    pub file_link: String,
     pub price: i128,
     pub active: bool,
     pub created_at: u64,
@@ -40,14 +41,21 @@ impl MarketplaceContract {
         env.storage().instance().set(&TOKEN, &token);
     }
 
+    fn check_initialized(env: &Env) {
+        env.storage().instance().get::<_, Address>(&TOKEN)
+            .expect("contract not initialized: call initialize(token_address) first");
+    }
+
     pub fn list_item(
         env: Env,
         seller: Address,
         category: String,
         title: String,
         description: String,
+        file_link: String,
         price: i128,
     ) -> u64 {
+        Self::check_initialized(&env);
         seller.require_auth();
 
         let mut count: u64 = env.storage().instance().get(&LST_CNTR).unwrap_or(0);
@@ -59,6 +67,7 @@ impl MarketplaceContract {
             category,
             title,
             description,
+            file_link,
             price,
             active: true,
             created_at: env.ledger().timestamp(),
@@ -81,6 +90,7 @@ impl MarketplaceContract {
         description: String,
         price: i128,
     ) {
+        Self::check_initialized(&env);
         seller.require_auth();
 
         let listings: Vec<Listing> = env.storage().instance().get(&LISTINGS).unwrap_or(Vec::new(&env));
@@ -116,6 +126,7 @@ impl MarketplaceContract {
     }
 
     pub fn cancel_item(env: Env, seller: Address, id: u64) {
+        Self::check_initialized(&env);
         seller.require_auth();
 
         let listings: Vec<Listing> = env.storage().instance().get(&LISTINGS).unwrap_or(Vec::new(&env));
@@ -149,6 +160,9 @@ impl MarketplaceContract {
     pub fn buy_item(env: Env, buyer: Address, id: u64) {
         buyer.require_auth();
 
+        let token_address: Address = env.storage().instance().get(&TOKEN)
+            .expect("contract not initialized: call initialize(token_address) first");
+
         let listings: Vec<Listing> = env.storage().instance().get(&LISTINGS).unwrap_or(Vec::new(&env));
         let mut updated = Vec::new(&env);
         let mut target: Option<Listing> = None;
@@ -174,8 +188,6 @@ impl MarketplaceContract {
             Some(l) => l,
             None => panic!("listing not found"),
         };
-
-        let token_address: Address = env.storage().instance().get(&TOKEN).unwrap();
         let token_client = token::Client::new(&env, &token_address);
         token_client.transfer(&buyer, &listing.seller, &listing.price);
 
